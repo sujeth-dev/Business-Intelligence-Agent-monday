@@ -1,17 +1,19 @@
-# Frontend scaffold placeholder
+# Frontend
 
-This directory holds hand-written source (`src/app`, `src/components`,
-`src/lib`) that assumes a Next.js + Tailwind + shadcn/ui project. The full
-`node_modules` / generated Next.js boilerplate is **not** checked into the
-release zip (see `.gitignore` in the repo root) and is not pre-generated here
-either, since it requires network installs.
+Next.js 14 (App Router) + Tailwind, with framer-motion for the small
+animations and zustand for state.
 
-Run `make develop` from the repo root — it will:
-1. Run `npx create-next-app@latest .` inside this folder if `next` isn't
-   already installed (non-interactive flags set in the Makefile).
-2. Run `npx shadcn-ui@latest init` and add the required components.
-3. Install `framer-motion`, `lucide-react`, `zustand`.
+Three main pieces on the page: the chat panel (clarifying questions render
+as clickable chips, data caveats in a banner above the answer), a live data
+grid showing what came back from monday.com, and the "Generate Leadership
+Update" panel.
 
-After that, drop the components in `src/components/DataTable.tsx`,
-`src/lib/store.ts`, and wire them into `src/app/page.tsx` per the project
-plan.
+Setup:
+
+```
+cp .env.local.example .env.local   # set NEXT_PUBLIC_API_URL to the backend
+npm install
+npm run dev                        # :3000, expects the backend on :5000
+```
+
+Or just run `make develop` from the repo root, which does both sides.
