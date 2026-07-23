@@ -34,27 +34,18 @@ test:
 	@echo ">> [test] All checks passed"
 
 ## ---- deploy: build production artifacts and ship them ----
-## Backend ships to Render (render.yaml blueprint, root: backend).
+## Backend ships to Railway (root directory: backend, auto-deploys on git push).
 ## Frontend ships to Vercel (root: frontend, vercel.json).
-## Automatic triggers only fire if you export the relevant env vars/CLIs;
+## Vercel triggers automatically if the CLI is installed/logged in;
 ## otherwise this prints the exact manual steps and exits 0 (non-blocking),
-## since a fresh clone won't have Render/Vercel auth configured yet.
+## since a fresh clone won't have Vercel auth configured yet.
 deploy: test
 	@echo ">> [deploy] Building frontend production bundle"
 	cd $(FRONTEND_DIR) && npm run build
 	@echo ">> [deploy] Verifying backend env is configured"
 	@test -f $(BACKEND_DIR)/.env || (echo "ERROR: backend/.env missing — copy from .env.example" && exit 1)
-	@if [ -n "$$RENDER_DEPLOY_HOOK_URL" ]; then \
-		echo ">> [deploy] Triggering Render deploy hook for backend"; \
-		curl -fsSL -X POST "$$RENDER_DEPLOY_HOOK_URL"; \
-	else \
-		echo ">> [deploy] RENDER_DEPLOY_HOOK_URL not set. Manual backend deploy:"; \
-		echo "     1. Push this repo to GitHub."; \
-		echo "     2. On Render: New -> Blueprint -> select repo (uses render.yaml)."; \
-		echo "     3. Fill in MONDAY_API_TOKEN, MONDAY_WORKORDERS_BOARD_ID, MONDAY_DEALS_BOARD_ID, OPENAI_API_KEY, FRONTEND_ORIGIN."; \
-		echo "     4. Copy the live Render URL for the frontend's NEXT_PUBLIC_API_URL."; \
-		echo "     (Next time: create a Deploy Hook on the Render service and export RENDER_DEPLOY_HOOK_URL to automate this step.)"; \
-	fi
+	@echo ">> [deploy] Backend deploy: Railway auto-deploys on every push to main"
+	@echo "     once the service's Root Directory is set to 'backend' (one-time dashboard setup)."
 	@if command -v vercel >/dev/null 2>&1; then \
 		echo ">> [deploy] Deploying frontend via Vercel CLI"; \
 		cd $(FRONTEND_DIR) && vercel --prod --yes; \

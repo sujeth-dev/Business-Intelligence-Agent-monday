@@ -58,35 +58,38 @@ make test         # lint + unit tests for backend, lint for frontend
 
 ## Deployment (tested end-to-end)
 
-### Backend → Render
+### Backend → Railway
 1. Push this repo to GitHub.
-2. Render dashboard → **New → Blueprint** → select the repo. It reads
-   `render.yaml` at the root (`rootDir: backend`, build `npm install`,
-   start `node server.js`, health check `/health`).
-3. Fill in the env vars Render prompts for: `MONDAY_API_TOKEN`,
-   `MONDAY_WORKORDERS_BOARD_ID`, `MONDAY_DEALS_BOARD_ID`, `OPENAI_API_KEY`,
-   `FRONTEND_ORIGIN` (set this once you have the Vercel URL, comma-separate
-   multiple origins if needed).
-4. Deploy. Note the live URL, e.g. `https://bi-agent-backend.onrender.com`.
-5. *(Optional automation)* Render → your service → Settings → Deploy Hook
-   → copy the URL → `export RENDER_DEPLOY_HOOK_URL=...` → `make deploy`
-   will curl it automatically from then on.
+2. Railway dashboard → **New Project** → **Deploy from GitHub repo** →
+   select this repo.
+3. In the service's **Settings**, set **Root Directory** to `backend`.
+   Railway auto-detects the Node app via Nixpacks and runs `npm install` +
+   `npm start` (`node server.js`) with no extra config file needed.
+4. Under **Settings → Networking**, set the healthcheck path to `/health`
+   (optional but recommended).
+5. Under **Variables**, add: `MONDAY_API_TOKEN`, `MONDAY_WORKORDERS_BOARD_ID`,
+   `MONDAY_DEALS_BOARD_ID`, `LLM_PROVIDER` (`groq`/`openai`/`openrouter`),
+   the matching API key (`GROQ_API_KEY`/`OPENAI_API_KEY`/`OPENROUTER_API_KEY`),
+   and `FRONTEND_ORIGIN` (set this once you have the Vercel URL below,
+   comma-separate multiple origins if needed).
+6. Deploy. Under **Settings → Networking**, generate a public domain. Note
+   the live URL, e.g. `https://bi-agent-backend.up.railway.app`.
 
 ### Frontend → Vercel
 1. Vercel dashboard → **New Project** → select the repo. Set **Root
    Directory** to `frontend` (it auto-detects Next.js via `vercel.json`).
-2. Add env var `NEXT_PUBLIC_API_URL` = the live Render backend URL from
+2. Add env var `NEXT_PUBLIC_API_URL` = the live Railway backend URL from
    above.
 3. Deploy. Note the live URL, e.g. `https://bi-agent.vercel.app`.
-4. Go back to Render and set `FRONTEND_ORIGIN` to this Vercel URL, then
+4. Go back to Railway and set `FRONTEND_ORIGIN` to this Vercel URL, then
    redeploy the backend so CORS allows it.
 5. *(Optional automation)* `npm i -g vercel && vercel login`, then
    `make deploy` will run `vercel --prod --yes` from `frontend/` if the
    CLI is installed and logged in.
 
-### One-shot
+### One-shot (local)
 ```
-make all      # clean -> develop -> test -> deploy
+make all      # clean -> develop -> test -> deploy (deploy step is Vercel-only; Railway deploys on git push)
 ```
 
 ### CI
@@ -94,15 +97,20 @@ make all      # clean -> develop -> test -> deploy
 lint+build on every push/PR to `main`.
 
 ## Verified locally before packaging
-- `npm test` in `backend/` — 3 suites (biService, normalizeService,
-  queryService), all passing.
+- `npm test` in `backend/` — 5 suites (biService, normalizeService,
+  queryService, timeframeService, joinService), all passing.
 - `npm run lint` — clean in both `backend/` and `frontend/` (ESLint 9 flat
   config for backend, `next lint` for frontend).
 - `npm run build` in `frontend/` — production build succeeds with full
   TypeScript checking.
-- Backend boots and returns graceful, non-crashing JSON errors when
-  monday.com/OpenAI credentials are absent (verified via curl against a
-  running instance).
+- Backend boots and returns graceful, non-crashing JSON errors on invalid
+  input, and correct data on `/health` (verified via curl against a running
+  instance).
+- End-to-end against the **live monday.com boards** (344 real deals, 176
+  real work orders) and a **live Groq LLM call**: `/api/data/bi-summary`,
+  `/api/agent/chat` (sector-scoped, multi-metric, timeframe-scoped, and
+  join-aware founder questions), `/api/agent/leadership-summary`, and a
+  clarification round-trip all produced correct, sensible responses.
 
 ## Known gaps (see docs/DECISION_LOG.md)
 - The cross-board join matches on client code only; it doesn't fall back to
