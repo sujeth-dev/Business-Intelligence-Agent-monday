@@ -45,39 +45,39 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 max-w-7xl mx-auto min-h-screen">
-      <div className="col-span-2 space-y-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-brand-navy dark:text-slate-50">
-              Executive Dashboard
-            </h1>
-            <p className="text-xs text-slate-500 mt-0.5">Live from monday.com · Deals + Work Orders</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggle}
-              className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-brand-navy dark:hover:text-white transition-colors"
-              aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-            >
-              {isDark ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-            <Button
-              onClick={generateLeadershipSummary}
-              disabled={isLeadershipLoading}
-              className="bg-brand-teal hover:bg-brand-teal/90 dark:bg-brand-teal-dark dark:hover:bg-brand-teal-dark/90 text-white dark:text-slate-900 font-semibold gap-2"
-            >
-              <Sparkles size={15} />
-              {isLeadershipLoading ? "Generating..." : "Leadership Update"}
-            </Button>
-          </div>
+    <div className="max-w-4xl mx-auto p-6 md:p-8 min-h-screen space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-brand-navy dark:text-slate-50">
+            Executive Dashboard
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">Live from monday.com · Deals + Work Orders</p>
         </div>
-        <Card className="h-[600px] bg-white border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:shadow-none p-4 overflow-hidden">
-          <DataTable />
-        </Card>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggle}
+            className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-brand-navy dark:hover:text-white transition-colors"
+            aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+          >
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <Button
+            onClick={generateLeadershipSummary}
+            disabled={isLeadershipLoading}
+            className="bg-brand-teal hover:bg-brand-teal/90 dark:bg-brand-teal-dark dark:hover:bg-brand-teal-dark/90 text-white dark:text-slate-900 font-semibold gap-2"
+          >
+            <Sparkles size={15} />
+            {isLeadershipLoading ? "Generating..." : "Leadership Update"}
+          </Button>
+        </div>
       </div>
 
-      <Card className="col-span-1 bg-white border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:shadow-none flex flex-col h-[664px]">
+      {/* Business snapshot first -- all the information, then the chat below it */}
+      <Card className="bg-white border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:shadow-none p-4 max-h-[440px] overflow-y-auto">
+        <DataTable />
+      </Card>
+
+      <Card className="bg-white border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:shadow-none flex flex-col h-[560px]">
         <div className="px-4 pt-4 pb-2 border-b border-slate-100 dark:border-slate-800">
           <div className="text-sm font-semibold text-brand-navy dark:text-slate-100">BI Agent</div>
           <div className="text-[11px] text-slate-500">Ask anything about pipeline or operations</div>
@@ -139,6 +139,14 @@ export default function Dashboard() {
             <div className="text-slate-500 text-xs animate-pulse">BI agent is thinking...</div>
           )}
         </div>
+        {messages.length > 1 && (
+          <PopularQuestions
+            variant="compact"
+            onAsk={handleOptionClick}
+            onLeadershipSummary={generateLeadershipSummary}
+            disabled={isLoading || isLeadershipLoading}
+          />
+        )}
         <form onSubmit={handleSubmit} className="p-4 border-t border-slate-100 dark:border-slate-800 flex gap-2">
           <Input
             className="bg-slate-50 border-slate-200 text-brand-navy placeholder:text-slate-400 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"

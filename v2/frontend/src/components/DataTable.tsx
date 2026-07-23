@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { fetchBoard } from "@/lib/api";
 import { formatCurrency, formatCurrencyPrecise, formatPercent } from "@/lib/format";
 import StatTile from "./StatTile";
@@ -44,6 +44,7 @@ export default function DataTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showQualityFlags, setShowQualityFlags] = useState(false);
+  const [showList, setShowList] = useState(false);
 
   useEffect(() => {
     Promise.all([fetchBoard("bi-summary"), fetchBoard("workorders")])
@@ -72,7 +73,7 @@ export default function DataTable() {
   const maxSectorValue = Math.max(...sortedSectors.map(([, s]) => s.value), 1);
 
   return (
-    <div className="h-full overflow-y-auto space-y-5 text-sm text-slate-700 dark:text-slate-300">
+    <div className="space-y-5 text-sm text-slate-700 dark:text-slate-300">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <StatTile
           label="Pipeline Value"
@@ -138,33 +139,63 @@ export default function DataTable() {
             Work Orders ({workOrders.length})
           </span>
           <button
-            onClick={() => setShowQualityFlags((v) => !v)}
-            className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
-              showQualityFlags
-                ? "border-status-warning/60 text-slate-700 dark:text-slate-200 bg-status-warning/10"
-                : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500"
-            }`}
-            aria-pressed={showQualityFlags}
+            onClick={() => setShowList((v) => !v)}
+            className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500 transition-colors"
+            aria-expanded={showList}
           >
-            <AlertCircle size={12} className={showQualityFlags ? "text-status-warning" : ""} />
-            Data quality
+            {showList ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            {showList ? "Hide list" : "Show list"}
           </button>
         </div>
-        <div className="rounded-lg border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800/70 overflow-hidden">
-          {workOrders.slice(0, 25).map((r, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between px-3 py-1.5 text-xs bg-white dark:bg-transparent"
-            >
-              <span className="truncate text-slate-700 dark:text-slate-300">{r.name || "(unnamed)"}</span>
-              {showQualityFlags && r.hasMissingFields && (
-                <span title="Missing required fields" aria-label="Missing required fields" className="shrink-0 ml-2 inline-flex">
-                  <AlertCircle size={14} className="text-status-warning" />
-                </span>
-              )}
-            </div>
-          ))}
+
+        {/* Compact status breakdown -- the useful signal, always visible */}
+        <div className="flex flex-wrap gap-1.5">
+          {Object.entries(bi.workOrders.statusCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([status, count]) => (
+              <span
+                key={status}
+                className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              >
+                {status} · {count}
+              </span>
+            ))}
         </div>
+
+        {/* Raw item list -- hidden until asked */}
+        {showList && (
+          <div className="mt-3">
+            <div className="flex justify-end mb-1.5">
+              <button
+                onClick={() => setShowQualityFlags((v) => !v)}
+                className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
+                  showQualityFlags
+                    ? "border-status-warning/60 text-slate-700 dark:text-slate-200 bg-status-warning/10"
+                    : "border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500"
+                }`}
+                aria-pressed={showQualityFlags}
+              >
+                <AlertCircle size={12} className={showQualityFlags ? "text-status-warning" : ""} />
+                Data quality
+              </button>
+            </div>
+            <div className="rounded-lg border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800/70 overflow-hidden">
+              {workOrders.slice(0, 25).map((r, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between px-3 py-1.5 text-xs bg-white dark:bg-transparent"
+                >
+                  <span className="truncate text-slate-700 dark:text-slate-300">{r.name || "(unnamed)"}</span>
+                  {showQualityFlags && r.hasMissingFields && (
+                    <span title="Missing required fields" aria-label="Missing required fields" className="shrink-0 ml-2 inline-flex">
+                      <AlertCircle size={14} className="text-status-warning" />
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
