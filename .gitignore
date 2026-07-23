@@ -1,0 +1,12 @@
+# Real assignment source data -- kept local only, never committed
+# (the agent must query monday.com dynamically, not read these files)
+Deal funnel Data.xlsx
+Work_Order_Tracker Data.xlsx
+
+# Local tooling / editor config
+.claude/
+.vscode/
+
+# OS cruft
+.DS_Store
+Thumbs.db
